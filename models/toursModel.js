@@ -16,9 +16,9 @@ const toursSchema = new mongoose.Schema({
     min: 1,
     max: 5
   },
-  duration: {
-    type: Number,
-    required: [true, "A tour must have a duration"]
+  difficulty: {
+    type: String,
+    required: [true, "A tour must have a difficulty"]
   }
 });
 

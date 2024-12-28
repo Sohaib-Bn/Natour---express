@@ -15,7 +15,7 @@ mongoose
     useCreateIndex: true,
     useFindAndModify: false
   })
-  .then(r => console.log(r))
+  .then()
   .catch(err => console.log("Database connection error:", err));
 
 // Import router modules
