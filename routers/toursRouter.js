@@ -4,10 +4,18 @@ const {
   createTour,
   getTour,
   updatedTour,
-  deleteTour
+  deleteTour,
+  setTopTours,
+  getToursStats,
+  getMonthlyPlan
 } = require("../controllers/toursControllers");
 
 const router = express.Router();
+
+router.route("/top-5-tours").get(setTopTours, getTours);
+
+router.route("/tours-stats").get(getToursStats);
+router.route("/monthly-plan/:year").get(getMonthlyPlan);
 
 router
   .route("/")

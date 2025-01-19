@@ -15,8 +15,8 @@ mongoose
     useCreateIndex: true,
     useFindAndModify: false
   })
-  .then()
-  .catch(err => console.log("Database connection error:", err));
+  .then(() => console.log("Connecting to the database was successful"))
+  .catch(() => console.log("Failed to connect to the database!😢"));
 
 // Import router modules
 const toursRouter = require("./routers/toursRouter");
@@ -38,6 +38,10 @@ app.use("/api/v1/tours", toursRouter);
 
 // Mount the users router on the "/api/v1/users" path
 app.use("/api/v1/users", usersRouter);
+
+app.all("*", (req, res) => {
+  res.status(404).json({ status: "fail", message: "Page not found" });
+});
 
 // Export the Express application for use in other files
 module.exports = app;

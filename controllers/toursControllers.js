@@ -1,10 +1,103 @@
 const Tours = require("../models/toursModel");
+const ApiFeatures = require("../utils/apiFeatures");
+
+exports.setTopTours = (req, res, next) => {
+  req.query.limit = "5";
+  req.query.sort = "-ratingsAverage, price";
+  req.query.fields = "name,price,ratingsAverage,summary,difficulty";
+  next();
+};
+
+exports.getToursStats = async (req, res) => {
+  try {
+    const toursStats = await Tours.aggregate([
+      {
+        $match: { ratingAverage: { $gte: 4.5 } }
+      },
+      {
+        $group: {
+          _id: { $toUpper: "$difficulty" },
+          numTours: { $sum: 1 },
+          numRatings: { $sum: "$ratingAverage" },
+          avgRating: { $avg: "$ratingAverage" },
+          avgPrice: { $avg: "$price" },
+          minPrice: { $min: "$price" },
+          maxPrice: { $max: "$price" }
+        }
+      },
+      {
+        $sort: { avgRating: -1 }
+      }
+    ]);
+    res.status(200).json({
+      message: "success",
+      results: toursStats.length,
+      data: {
+        toursStats
+      }
+    });
+  } catch (err) {
+    res.status(404).json({ status: "fail", message: err.message });
+  }
+};
+
+exports.getMonthlyPlan = async (req, res) => {
+  try {
+    const { year } = req.params;
+    const monthlyPlan = await Tours.aggregate([
+      {
+        $unwind: "$startDates"
+      },
+      {
+        $match: {
+          startDates: {
+            $gte: new Date(`${+year.slice(1)}-01-01T00:00:00.000Z`),
+            $lte: new Date(`${+year.slice(1)}-12-31T23:59:59.999Z`)
+          }
+        }
+      },
+      {
+        $group: {
+          _id: { $month: "$startDates" },
+          numTours: { $sum: 1 }
+        }
+      },
+      {
+        $addFields: { month: "$_id" }
+      },
+      {
+        $project: { _id: 0 }
+      },
+      {
+        $sort: { month: 1 }
+      }
+    ]);
+    res.status(200).json({
+      message: "success",
+      data: {
+        monthlyPlan
+      }
+    });
+  } catch (err) {
+    res.status(404).json({ status: "fail", message: err.message });
+  }
+};
 
 exports.getTours = async (req, res) => {
   try {
-    const tours = await Tours.find();
+    // AWAITE THE QUERY
+    const Features = new ApiFeatures(Tours.find(), req.query)
+      .fitler()
+      .sort()
+      .limitFields()
+      .pagination();
+
+    const tours = await Features.query;
+
+    // SEND THE RESPONSE
     res.status(200).json({
       message: "success",
+      results: tours.length,
       data: {
         tours: tours
       }
